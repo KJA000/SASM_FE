@@ -5,12 +5,13 @@ import SearchBar from "../common/SearchBar";
 import searchBlack from "../../assets/img/search_black.svg";
 import Pagination from "../common/Pagination";
 import { useCookies } from "react-cookie";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Loading from "../common/Loading";
 import checkSasmAdmin from "../Admin/Common";
 import AdminButton from "../Admin/components/AdminButton";
 import Request from "../../functions/common/Request";
 import toggleOpenImg from "../../assets/img/toggleOpen.svg";
+import qs from 'qs';
 
 const Section = styled.div`
   box-sizing: border-box;
@@ -123,7 +124,10 @@ const StoryListPage = () => {
   const [cookies, setCookie, removeCookie] = useCookies(["name"]);
   const [searchToggle, setSearchToggle] = useState(false);
   const [limit, setLimit] = useState(4);
-  const [page, setPage] = useState(1);
+  const location = useLocation();
+    const queryString = qs.parse(location.search, {
+        ignoreQueryPrefix: true
+      });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [toggleOpen, setToggleOpen] = useState(false);
@@ -148,7 +152,7 @@ const StoryListPage = () => {
   useEffect(() => {
     handleSearchToggle();
     checkSasmAdmin(token, setLoading, cookies, localStorage, navigate).then((result) => setIsSasmAdmin(result));
-  }, [page, orderList]);
+  }, [queryString.page, orderList]);
 
   //검색 요청 api url
   const handleSearchToggle = async (e) => {
@@ -158,10 +162,10 @@ const StoryListPage = () => {
     setSearchToggle(true);
     setLoading(true);
     let newPage;
-    if (page == 1) {
+    if (queryString.page == 1) {
       newPage = null;
     } else {
-      newPage = page;
+      newPage = queryString.page;
     }
     let headerValue;
     if (token === null || undefined) {
@@ -181,7 +185,7 @@ const StoryListPage = () => {
     const response = await request.get("/stories/story_search/", {
       page: newPage,
       search: searched,
-      order: orderList.toString(),
+      latest: orderList.toString(),
     }, null);
 
     // console.log("response??", response);
@@ -252,8 +256,7 @@ const StoryListPage = () => {
             <Pagination
               total={pageCount}
               limit={limit}
-              page={page}
-              setPage={setPage}
+              page={queryString.page}
             />
             {isSasmAdmin ? (
               <AdminButton

@@ -26,6 +26,11 @@ const PlacenameBox = styled.div`
   justify-content: space-between;
 `;
 
+const Placename = styled(Link)`
+  
+  color: inherit;
+`;
+
 // 기존에 존재하는 버튼에 재스타일
 const Button = styled.button`
   background-color: #ffffff;
@@ -58,6 +63,7 @@ export default function ItemCard(props) {
   const height = isMobile ? "45vw" : "13.5vw";
   const request = new Request(cookies, localStorage, navigate);
   // 좋아요 클릭 이벤트
+  const place_name = props.place_name
   const toggleLike = async (id) => {
     const response = await request.post("/places/place_like/", { id: id }, null);
     console.log("response", response);
@@ -99,9 +105,10 @@ export default function ItemCard(props) {
             flexFlow: "column",
           }}
         >
-          <Link to={`/map/${props.place_name}`} style={{ textDecoration: 'none' }}>
             <PlacenameBox>
-              {props.place_name}
+              <Placename to={`/map?page=1&place=${place_name}`} state={{name : place_name}} style={{ textDecoration: 'none' }}>
+                {props.place_name}
+              </Placename>
               <div style={{ display: 'flex', }}>
                 <img src={require(`../../../assets/img/Category/Category${MatchCategory(props.category)}.svg`)} />
                 <LikeButton>
@@ -109,7 +116,6 @@ export default function ItemCard(props) {
                 </LikeButton>
               </div>
             </PlacenameBox>
-          </Link>
         </CardContent>
       </Card>
     </div>

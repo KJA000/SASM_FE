@@ -78,16 +78,18 @@ export default function WriteComment({ id }) {
     const navigate = useNavigate();
     const request = new Request(cookies, localStorage, navigate);
     const uploadComment = async (event) => {
+        event.preventDefault();
         if (!token) {
             alert('로그인이 필요합니다.');
             navigate('/auth');
         }
         else {
-            const response = await request.post("/stories/comments/", {
+            const response = await request.post("/stories/comments/create/", {
                 story: id,
                 content: event.target.text.value,
             });
         }
+        window.location.reload();
     }
 
     return (

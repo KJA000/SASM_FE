@@ -1,7 +1,17 @@
+import React from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { useLocation } from "react-router-dom";
+import qs from 'qs';
 
-function Pagination({ total, limit, page, setPage }) {
+function Pagination({ total, limit }) {
   const numPages = Math.ceil(total / limit);
+  const location = useLocation();
+  const queryString = qs.parse(location.search, {
+    ignoreQueryPrefix: true
+  });
+  const previousPage = (parseInt(queryString.page) -1);
+  const nextPage = (parseInt(queryString.page) +1);
 
   return (
     <>
@@ -9,26 +19,21 @@ function Pagination({ total, limit, page, setPage }) {
         ""
       ) : (
         <Nav>
-          <Button onClick={() => setPage(page - 1)} disabled={page === 1}>
+          <StyledLink to={`?page=${previousPage}`} style={previousPage === 0? {display: 'none'} : {display:'inline'}}>
             &lt;
-          </Button>
+          </StyledLink>
           {Array(numPages)
             .fill()
             .map((_, i) => (
-              <Button
-                key={i + 1}
-                onClick={() => setPage(i + 1)}
-                aria-current={page === i + 1 ? "page" : null}
+              <StyledLink to={`?page=${i+1}`}
+              aria-current={parseInt(queryString.page) === i + 1 ? "page" : null}
               >
                 {i + 1}
-              </Button>
+              </StyledLink>
             ))}
-          <Button
-            onClick={() => setPage(page + 1)}
-            disabled={page === numPages}
-          >
+          <StyledLink to={`?page=${nextPage}`} style={nextPage === numPages+1? {display: 'none'} : {display:'inline'}}>
             &gt;
-          </Button>
+          </StyledLink>
         </Nav>
       )}
     </>
@@ -40,31 +45,21 @@ const Nav = styled.nav`
   justify-content: center;
   align-items: center;
 `;
-
-const Button = styled.button`
+ const StyledLink = styled(Link)`
   border: none;
   border-radius: 8px;
   padding: 8px;
   margin: 0;
   background: white;
   color: #808080;
-  // color: black;
   font-size: 1.3rem;
+  text-decoration: none;
 
   &:hover {
     border: none;
     background: white;
     cursor: pointer;
     transform: translateY(-2px);
-  }
-
-  &[disabled] { 불가능한 경우 가리기
-    border: none;
-    background: white;
-    // color: #999999;
-    color: white;
-    cursor: revert;
-    transform: revert;
   }
 
   &[aria-current] {

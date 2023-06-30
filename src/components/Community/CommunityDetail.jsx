@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { useState } from 'react'
 import { useCookies } from 'react-cookie';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Request from '../../functions/common/Request';
 import Loading from '../common/Loading'
 import styled from 'styled-components';
@@ -10,6 +10,8 @@ import HeartButton from '../common/Heart';
 import WriteComment from './Comments/WriteComment';
 import Comment from './Comments/Comment';
 import CommunityUpdate from './CommunityUpdate';
+import Pagination from "../common/Pagination";
+import qs from 'qs';
 
 const Section = styled.div`
   position: relative;
@@ -71,30 +73,43 @@ const CommentsWrapper = styled.div`
 export default function CommunityDetail({ board, id, format }) {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState({});
-  const [review, setReview] = useState({});
+  const [review, setReview] = useState({
+    total:0,
+    data:'',
+  });
   const [cookies, setCookie, removeCookie] = useCookies(["name"]);
   //mode false -> detail / true -> update
   const [mode, setMode] = useState(false);
   const [like, setLike] = useState(false);
   const [report, setReport] = useState(false);
+  const location = useLocation();
+  const queryString = qs.parse(location.search, {
+    ignoreQueryPrefix: true
+  });
   const node = useRef();
   const email = localStorage.getItem('email');
   const navigate = useNavigate()
   const request = new Request(cookies, localStorage, navigate);
   const getDetail = async () => {
     const response_detail = await request.get(`/community/posts/${id}`);
-    const response_review = await request.get(`/community/post_comments/`, {
-      post: id,
-    })
-    setReview(response_review.data.data.results);
     setDetail(response_detail.data);
     setLike(response_detail.data.likes);
     setLoading(false);
   }
+  const getReview = async () => {
+    const response_review = await request.get(`/community/post_comments/`, {
+      post: id,
+      page: queryString.page,
+    })
+    setReview({total:response_review.data.data.count, data:response_review.data.data.results});
+  }
 
   useEffect(() => {
     getDetail();
-  }, [like])
+  }, [like]);
+  useEffect(()=>{
+    getReview();
+  }, [queryString.page])
   let isWriter = false;
   useEffect(() => {
     const clickOutside = (e) => {
@@ -113,7 +128,7 @@ export default function CommunityDetail({ board, id, format }) {
   const deleteItem = async () => {
     if (window.confirm('삭제하시겠습니까?')) {
       const response = await request.delete(`/community/posts/${id}/delete/`);
-      navigate(`/community/${board}`);
+      navigate(`/community/${board}?page=1`);
       alert('삭제되었습니다.');
     }
   }
@@ -121,6 +136,9 @@ export default function CommunityDetail({ board, id, format }) {
     const response = await request.post(`/community/posts/${id}/like/`);
     setLike(!like);
   }
+  useEffect(()=>{
+    console.log(review);
+  }, [review])
   return (
     <>
       {
@@ -183,10 +201,14 @@ export default function CommunityDetail({ board, id, format }) {
                   }
                 </ButtonWrapper>
                 <WriteComment format={format} id={id} isParent={true}></WriteComment>
-                <CommentsWrapper>{review.map((data, index) => (
-                  <Comment format={format} key={index} id={id} data={data} />
-                ))}
+                <CommentsWrapper>
+                  { review.data &&
+                    review.data.map((data, index) => (
+                      <Comment format={format} key={index} id={id} data={data} />
+                    ))
+                  }
                 </CommentsWrapper>
+                <Pagination page={queryString.page} total={review.total} limit={20}/>
               </Section>
             }
           </>

@@ -215,13 +215,14 @@ const FooterBox = styled.div`
 `;
 const BackToList = styled.div`
   color: black;
+  cursor : pointer;
   font-size: 1rem;
   @media screen and (max-width: 768px) {
   }
 `;
 const StoryDetailBox = (props) => {
   const isMobile = useMediaQuery({ query: "(max-width:768px)" });
-  const id = props.id;
+  const id = props.id; 
   const [data, setData] = useState([]);
   const [comment, setComment] = useState([]);
   const [recommend, setRecommend] = useState([]);
@@ -232,7 +233,7 @@ const StoryDetailBox = (props) => {
   const navigate = useNavigate();
   const request = new Request(cookies, localStorage, navigate);
   const handlePageGoToMap = (place_name) => {
-    window.location.href = `/map/${place_name}`
+    navigate(`/map?page=1&place=${place_name}`, { state: { name : place_name }})
   };
 
   // 좋아요 클릭 이벤트
@@ -254,11 +255,10 @@ const StoryDetailBox = (props) => {
 
   const loadItem = async () => {
     setLoading(true);
-    const response_detail = await request.get("/stories/story_detail/", { id: id }, null);
+    const response_detail = await request.get(`/stories/story_detail/${id}/`);
     const response_comment = await request.get("/stories/comments/", { story: id }, null);
     const recommend_story = await request.get("/stories/recommend_story/", { id: id }, null);
-    // console.log("data", response.data);.
-    setData(response_detail.data.data[0]);
+    setData(response_detail.data.data);
     setComment(response_comment.data.data);
     setRecommend(recommend_story.data.data);
     setLoading(false);
@@ -280,27 +280,27 @@ const StoryDetailBox = (props) => {
                 <ButtonText>Go To Map</ButtonText>
               </MapButton>
               <BackToList
-                onClick={() => { navigate(`/story`); }}>&#60; Back To List</BackToList>
+                onClick={() => { navigate(-1); }}>&#60; Back To List</BackToList>
             </ButtonDiv>
           </Mobile>
           <TopBox>
             <CategoryOptionBox>
-              <Category>{data.category}</Category>
+              <Category>{data?.category}</Category>
               <Options>{data.semi_category}</Options>
             </CategoryOptionBox>
           </TopBox>
           <MainTitleNStoreNameBox>
             <MainTitleBox>
               <MainTitle>{data.title}</MainTitle>
-              <Pc><BackToList onClick={() => { navigate(`/story`); }}>&#60; Back To List</BackToList></Pc>
-              <Tablet><BackToList onClick={() => { navigate(`/story`); }}>&#60; Back To List</BackToList></Tablet>
+              <Pc><BackToList onClick={() => { navigate(-1); }}>&#60; Back To List</BackToList></Pc>
+              <Tablet><BackToList onClick={() => { navigate(-1); }}>&#60; Back To List</BackToList></Tablet>
             </MainTitleBox>
             <StoreNameBox>
               <StoreName>
                 {data.place_name}
                 <LikeIconBox>
                   <LikeButton>
-                    {data.story_like === "ok" ? (
+                    {data.story_like === true ? (
                       <HeartButton like={!like} onClick={toggleLike} />
                     ) : (
                       <HeartButton like={like} onClick={toggleLike} />
